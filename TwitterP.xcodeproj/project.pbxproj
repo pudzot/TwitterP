@@ -47,6 +47,7 @@
 		1BBAB0332981CACB0061210A /* TweetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BBAB0322981CACB0061210A /* TweetViewModel.swift */; };
 		1BCDB7FC29891AB500CDBA92 /* ActionSheetLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BCDB7FB29891AB500CDBA92 /* ActionSheetLauncher.swift */; };
 		1BCDB7FE2989266500CDBA92 /* ActionSheetCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BCDB7FD2989266500CDBA92 /* ActionSheetCell.swift */; };
+		1BCDB8002989355000CDBA92 /* ActionSheetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BCDB7FF2989354F00CDBA92 /* ActionSheetViewModel.swift */; };
 		1BFBA56129867F090060161D /* UserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFBA56029867F090060161D /* UserCell.swift */; };
 		1BFBA5632986C8E10060161D /* TweetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFBA5622986C8E10060161D /* TweetController.swift */; };
 /* End PBXBuildFile section */
@@ -88,6 +89,7 @@
 		1BBAB0322981CACB0061210A /* TweetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TweetViewModel.swift; sourceTree = "<group>"; };
 		1BCDB7FB29891AB500CDBA92 /* ActionSheetLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionSheetLauncher.swift; sourceTree = "<group>"; };
 		1BCDB7FD2989266500CDBA92 /* ActionSheetCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionSheetCell.swift; sourceTree = "<group>"; };
+		1BCDB7FF2989354F00CDBA92 /* ActionSheetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionSheetViewModel.swift; sourceTree = "<group>"; };
 		1BFBA56029867F090060161D /* UserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCell.swift; sourceTree = "<group>"; };
 		1BFBA5622986C8E10060161D /* TweetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TweetController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -188,6 +190,7 @@
 				1BBAB0322981CACB0061210A /* TweetViewModel.swift */,
 				1B4FC65C29856598008A0CEA /* ProfileHeaderViewModel.swift */,
 				1B35C61B2988656F0090515A /* UploadTweetViewModel.swift */,
+				1BCDB7FF2989354F00CDBA92 /* ActionSheetViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -334,6 +337,7 @@
 				1B452C54297DBD52007D34C0 /* MainTabController.swift in Sources */,
 				1BB019332987EAF4002A6975 /* TweetHeader.swift in Sources */,
 				1BBAB0332981CACB0061210A /* TweetViewModel.swift in Sources */,
+				1BCDB8002989355000CDBA92 /* ActionSheetViewModel.swift in Sources */,
 				1B991AD5297ED96B00EF381C /* RegistrationController.swift in Sources */,
 				1B452C56297DBF29007D34C0 /* FeedController.swift in Sources */,
 				1B991AE6297F1FCB00EF381C /* Constants.swift in Sources */,
