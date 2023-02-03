@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import ActiveLabel
 
 protocol TweetHeaderDelegate: AnyObject {
     func showActionSheet()
@@ -53,11 +54,11 @@ class TweetHeader: UICollectionReusableView {
         return label
     }()
     
-    private let captionLabel: UILabel = {
-        let label = UILabel()
+    private let captionLabel: ActiveLabel = {
+        let label = ActiveLabel()
         label.font = UIFont.boldSystemFont(ofSize: 20)
         label.numberOfLines = 0
-        label.text = "Some test caption"
+        label.mentionColor = .twitterBlue
         return label
     }()
     
@@ -127,6 +128,14 @@ class TweetHeader: UICollectionReusableView {
         return button
     }()
     
+    private let replyLabel: ActiveLabel = {
+        let label = ActiveLabel()
+        label.textColor = .lightGray
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.mentionColor = .twitterBlue
+        return label
+    }()
+    
     // MARK: Lifecycle
     
     override init(frame: CGRect) {
@@ -138,8 +147,13 @@ class TweetHeader: UICollectionReusableView {
         labelStack.axis = .vertical
         labelStack.spacing = -6
         
-        let stack = UIStackView(arrangedSubviews: [profileImageView, labelStack])
-        stack.spacing = 12
+        let imageCaptionstack = UIStackView(arrangedSubviews: [profileImageView, labelStack])
+        imageCaptionstack.spacing = 12
+        
+        let stack = UIStackView(arrangedSubviews: [replyLabel, imageCaptionstack])
+        stack.axis = .vertical
+        stack.spacing = 8
+        stack.distribution = .fillProportionally
         
         addSubview(stack)
         stack.anchor(top: topAnchor, left: leftAnchor, paddingTop: 16, paddingLeft: 16)
@@ -207,6 +221,12 @@ class TweetHeader: UICollectionReusableView {
         dateLabel.text = viewModel.headerTimestamp
         retweetsLabel.attributedText = viewModel.retweetsAttributedString
         likesLabel.attributedText = viewModel.likesAttributedString
+        likeButton.setImage(viewModel.likeButtonImage, for: .normal)
+        likeButton.tintColor = viewModel.likeButtonTintColor
+        
+        replyLabel.isHidden = viewModel.shouldHideReplyLabel
+        replyLabel.text = viewModel.replyText
+        
     }
     
     // MARK: - Helpers

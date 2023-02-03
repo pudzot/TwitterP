@@ -6,7 +6,7 @@
 //
 
 import UIKit
-
+import Firebase
 
 private let reuseIdentifier = "TweetCell"
 private let headerIdentifier = "ProfileHeader"
@@ -17,16 +17,33 @@ class ProfileController: UICollectionViewController {
     
     private var user: User
     
+    private var selectedFilter: ProfileFilterOptions = .tweets {
+        didSet {
+            collectionView.reloadData()
+        }
+    }
+    
+    private var tweets = [Tweet]()
+    private var likedTweets = [Tweet]()
+    private var replies = [Tweet]()
+    
+    private var currentDataSource: [Tweet] {
+        switch selectedFilter {
+        case .tweets:
+            return tweets
+        case .replies:
+            return replies
+        case .likes:
+            return likedTweets
+        }
+    }
+    
     init(user: User) {
         self.user = user
         super.init(collectionViewLayout: UICollectionViewFlowLayout())
     }
     
-    private var tweets = [Tweet]() {
-        didSet {
-            collectionView.reloadData()
-        }
-    }
+   
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -38,6 +55,8 @@ class ProfileController: UICollectionViewController {
         super.viewDidLoad()
         configureCollectionView()
         fetchTweets()
+        fetchReplies()
+        fetchLikedTweets()
         checkIfUserIsFollowed()
         fetchUsersStats()
         
@@ -49,6 +68,23 @@ class ProfileController: UICollectionViewController {
         TweetService.shared.fetchTweets(forUser: user) { tweets in
            // print("Tweets are \(tweets)")
             self.tweets = tweets
+            self.collectionView.reloadData()
+        }
+    }
+    
+    func fetchReplies() {
+        TweetService.shared.fetchReplies(forUser: user) { tweets in
+            self.replies = tweets
+            
+            self.replies.forEach { reply in
+                print("\(reply.replyingTo)")
+            }
+        }
+    }
+    
+    func fetchLikedTweets() {
+        TweetService.shared.fetchLikes(forUser: user) { tweets in
+            self.likedTweets = tweets
         }
     }
     
@@ -81,6 +117,9 @@ class ProfileController: UICollectionViewController {
         collectionView.contentInsetAdjustmentBehavior = .never
         collectionView.register(TweetCell.self, forCellWithReuseIdentifier: reuseIdentifier)
         collectionView.register(ProfileHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: headerIdentifier)
+        
+        guard let tabHeight = tabBarController?.tabBar.frame.height else {return}
+        collectionView.contentInset.bottom = tabHeight
     }
     
 }
@@ -89,13 +128,13 @@ class ProfileController: UICollectionViewController {
 
 extension ProfileController {
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return tweets.count
+        return currentDataSource.count
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! TweetCell
         
-        cell.tweet = tweets[indexPath.row]
+        cell.tweet = currentDataSource[indexPath.row]
         
         return cell
     }
@@ -108,6 +147,11 @@ extension ProfileController {
         header.delegate = self
         return header
     }
+    
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let controller = TweetController(tweet: currentDataSource[indexPath.row])
+        navigationController?.pushViewController(controller, animated: true)
+    }
 }
 
 // MARK: - UICollectionViewDelegateFlowLayout
@@ -116,18 +160,34 @@ extension ProfileController: UICollectionViewDelegateFlowLayout {
         return CGSize(width: view.frame.width, height: 350)
     }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 120)
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout:
+        UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+            let viewModel = TweetViewModel(tweet: currentDataSource[indexPath.row])
+            var height = viewModel.size(forWidth: view.frame.width).height + 72
+        
+        if currentDataSource[indexPath.row].isReply {
+            height += 20
+        }
+            return CGSize(width: view.frame.width, height: height)
     }
 }
 
 extension ProfileController: ProfileHeaderDelegate {
+    func didSelect(filter: ProfileFilterOptions) {
+        print(" did select filter \(filter)")
+        self.selectedFilter = filter
+    }
+    
     func handleEditProfileFollow(_ header: ProfileHeader) {
         
        //print("User is followed is \(user.isFollowed) before button tap")
         
         if user.isCurrentUser { 
-            print("Show edit profile controller")
+            let controller = EditProfileController(user: user)
+            controller.delegate = self
+            let nav = UINavigationController(rootViewController: controller)
+            nav.modalPresentationStyle = .fullScreen
+            present(nav, animated: true)
         }
         
         if user.isFollowed {
@@ -140,6 +200,8 @@ extension ProfileController: ProfileHeaderDelegate {
             UserService.shared.followUser(uid: user.uid) { err, ref in
                 self.user.isFollowed = true
                 self.collectionView.reloadData()
+                
+                NotificationService.shared.uploadNotification(type: .follow, user: self.user)
               //  print("User is followed is \(self.user.isFollowed) after button tap")
             }
         }   
@@ -147,6 +209,25 @@ extension ProfileController: ProfileHeaderDelegate {
     
     func handleDismiss() {
         navigationController?.popViewController(animated: true)
+    }
+}
+
+extension ProfileController: EditProfileControllerDelegate {
+    func handleLogout() {
+            do {
+                try Auth.auth().signOut()
+                let nav = UINavigationController(rootViewController: LoginController())
+                 nav.modalPresentationStyle = .fullScreen
+                self.present(nav, animated: true)
+            } catch let error {
+                print("DEBUG: Failed to sign out user with error \(error.localizedDescription)")
+            }
+        }
+    
+    func controller(_ controller: EditProfileController, wantsToUpdate user: User) {
+        controller.dismiss(animated: true)
+        self.user = user
+        collectionView.reloadData()
     }
     
     

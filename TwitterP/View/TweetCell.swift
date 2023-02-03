@@ -6,10 +6,13 @@
 //
 
 import UIKit
+import ActiveLabel
 
 protocol TweetCellDelegate: AnyObject {
     func handleProfileImageTapped(_ cell: TweetCell)
     func handleReplyTapped(_ cell: TweetCell)
+    func handleLikeTapped(_ cell: TweetCell)
+    func handleFetchUser(withUsername username: String)
 }
 
 
@@ -27,11 +30,11 @@ class TweetCell: UICollectionViewCell {
     
     private lazy var profileImageView: UIImageView = {
         let iv = UIImageView()
-        iv.contentMode = .scaleAspectFit
+        iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
         iv.setDimensions(width: 48, height: 48)
         iv.layer.cornerRadius = 48 / 2
-        iv.backgroundColor = .twitterBlue
+       // iv.backgroundColor = .twitterBlue
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleProfileImageTapped))
         iv.addGestureRecognizer(tap)
@@ -40,10 +43,20 @@ class TweetCell: UICollectionViewCell {
         return iv
     }()
     
-    private let captionLabel: UILabel = {
-        let label = UILabel()
+    private let replyLabel: ActiveLabel = {
+        let label = ActiveLabel()
+        label.textColor = .lightGray
+        label.font = UIFont.systemFont(ofSize: 12)
+        label.mentionColor = .twitterBlue
+        return label
+    }()
+    
+    private let captionLabel: ActiveLabel = {
+        let label = ActiveLabel()
         label.font = UIFont.systemFont(ofSize: 16)
         label.numberOfLines = 0
+        label.mentionColor = .twitterBlue
+        label.hashtagColor = .twitterBlue
         label.text = "Some test caption"
         return label
     }()
@@ -92,19 +105,33 @@ class TweetCell: UICollectionViewCell {
         super.init(frame: frame)
         backgroundColor = .white
         
-        addSubview(profileImageView)
-        profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 8, paddingLeft: 8)
+//        addSubview(profileImageView)
+//        profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 8, paddingLeft: 8)
         
-        let stack = UIStackView(arrangedSubviews: [infoLabel, captionLabel])
+        let captionStack = UIStackView(arrangedSubviews: [infoLabel, captionLabel])
+        captionStack.axis = .vertical
+        captionStack.distribution = .fillProportionally
+        captionStack.spacing = 4
+        
+        let imageCaptionStack = UIStackView(arrangedSubviews: [profileImageView, captionStack])
+        imageCaptionStack.distribution = .fillProportionally
+        imageCaptionStack.spacing = 12
+        imageCaptionStack.alignment = .leading
+        
+//        addSubview(imageCaptionStack)
+//        imageCaptionStack.anchor(top: topAnchor, left: leftAnchor, paddingTop: 8, paddingLeft: 12, paddingRight: 12)
+        
+        let stack = UIStackView(arrangedSubviews: [replyLabel, imageCaptionStack])
         stack.axis = .vertical
+        stack.spacing = 8
         stack.distribution = .fillProportionally
-        stack.spacing = 4
         
         addSubview(stack)
-        stack.anchor(top: profileImageView.topAnchor, left: profileImageView.rightAnchor, paddingLeft: 12, paddingRight: 12)
+        stack.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 4, paddingLeft: 12, paddingRight: 12)
+        
+       // replyLabel.isHidden = true
         
         infoLabel.font = UIFont.systemFont(ofSize: 14)
-        infoLabel.text = "Eddie Brock @Venom"
         
         let actionStack = UIStackView(arrangedSubviews: [commentButton, retweetButton, likeButton, shareButton])
         actionStack.axis = .horizontal
@@ -117,6 +144,8 @@ class TweetCell: UICollectionViewCell {
         underlineView.backgroundColor = .systemGroupedBackground
         addSubview(underlineView)
         underlineView.anchor(left: leftAnchor, bottom: bottomAnchor, right: rightAnchor, height: 1)
+        
+        configureMentionHandler()
         
     }
     
@@ -140,7 +169,7 @@ class TweetCell: UICollectionViewCell {
     }
     
     @objc func handleLikeTapped() {
-        print("like tapped")
+        delegate?.handleLikeTapped(self)
     }
     
     @objc func handleShareTapped() {
@@ -154,6 +183,17 @@ class TweetCell: UICollectionViewCell {
         captionLabel.text = tweet.caption
         profileImageView.sd_setImage(with: viewModel.profileImageUrl)
         infoLabel.attributedText = viewModel.userInfoText
+        likeButton.tintColor = viewModel.likeButtonTintColor
+        likeButton.setImage(viewModel.likeButtonImage, for: .normal)
+        
+        replyLabel.isHidden = viewModel.shouldHideReplyLabel
+        replyLabel.text = viewModel.replyText
+    }
+    
+    func configureMentionHandler() {
+        captionLabel.handleMentionTap { username in
+            self.delegate?.handleFetchUser(withUsername: username)
+        }
     }
     
     // MARK: - Helpers

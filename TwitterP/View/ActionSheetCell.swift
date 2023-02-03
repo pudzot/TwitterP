@@ -8,6 +8,12 @@
 import UIKit
 
 class ActionSheetCell: UITableViewCell {
+    
+    var option: ActionSheetOptions? {
+        didSet {
+            configure()
+        }
+    }
 
     private let optionImageView: UIImageView = {
         let iv = UIImageView()
@@ -40,6 +46,10 @@ class ActionSheetCell: UITableViewCell {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    func configure() {
+        titleLabel.text = option?.description
     }
     
 }

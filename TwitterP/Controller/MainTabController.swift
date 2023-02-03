@@ -8,9 +8,16 @@
 import UIKit
 import Firebase
 
+enum ActionButtonConfiguration {
+    case tweet
+    case message
+}
+
 class MainTabController: UITabBarController {
     
     // MARK: - Properties
+    
+    private var buttonConfig: ActionButtonConfiguration = .tweet
     
     var user: User? {
         didSet {
@@ -33,7 +40,7 @@ class MainTabController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .twitterBlue
-       // logOutUser()
+     
         authenticateUserAndConfigureUI()
         
         
@@ -41,13 +48,20 @@ class MainTabController: UITabBarController {
     
     // MARK: - Selectors
     @objc func actionButtonTapped() {
-        DispatchQueue.main.async {
+        let controller: UIViewController
+        
+        switch buttonConfig {
+        case .message:
+            controller = SearchController(config: .messages)
+        case .tweet:
             guard let user = self.user else {return}
-            let controller = UploadTweetController(user: user, config: .tweet)
+            controller = UploadTweetController(user: user, config: .tweet)
+        }
+            
             let nav = UINavigationController(rootViewController: controller)
              nav.modalPresentationStyle = .fullScreen
             self.present(nav, animated: true)
-        }
+        
     }
 
     // MARK: - API
@@ -76,18 +90,12 @@ class MainTabController: UITabBarController {
         }
     }
     
-    func logOutUser() {
-        do {
-            try Auth.auth().signOut()
-            print("log out user")
-        } catch let error {
-            print("DEBUG: Failed to sign out user with error \(error.localizedDescription)")
-        }
-    }
+   
     
     // MARK: - Helpers
     
     func configureUI() {
+        self.delegate = self
         view.addSubview(actionButton)
 //        actionButton.translatesAutoresizingMaskIntoConstraints = false
 //        actionButton.heightAnchor.constraint(equalToConstant: 56).isActive = true
@@ -105,7 +113,7 @@ class MainTabController: UITabBarController {
         let feed = FeedController(collectionViewLayout: UICollectionViewFlowLayout())
         let nav1 = templateNavigationController(image: UIImage(named: "home_unselected"), rootViewController: feed)
         
-        let explore = ExploreController()
+        let explore = SearchController(config: .userSearch)
         let nav2 = templateNavigationController(image: UIImage(named: "search_unselected"), rootViewController: explore)
         
         let notifications = NotificationController()
@@ -152,4 +160,14 @@ class MainTabController: UITabBarController {
         tabBar.scrollEdgeAppearance = tabBar.standardAppearance
     }
     
+}
+
+extension MainTabController: UITabBarControllerDelegate {
+    func tabBarController(_ tabBarController: UITabBarController, didSelect viewController: UIViewController) {
+        let index = viewControllers?.firstIndex(of: viewController)
+        let imageName = index == 3 ? "mail" : "new_tweet"
+        self.actionButton.setImage(UIImage(named: imageName), for: .normal)
+        buttonConfig = index == 3 ? .message : .tweet
+        
+    }
 }
